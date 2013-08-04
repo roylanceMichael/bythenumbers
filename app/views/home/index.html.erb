@@ -1,0 +1,206 @@
+<div class="row">
+	<div class="span4">
+		<form class="form">
+			<legend>by the numbers record</legend>
+
+		  	<label class="control-label" for="line">Line</label>
+		  	<select name="line" class="form-control" data-bind="options: lineOpts, value: selLine"></select>
+			
+			<label class="control-label" for="lineinside">Line Inside</label>
+		  	<select name="lineinside" class="form-control" data-bind="options: lineInsideOpts, value: selLineInside"></select>
+			
+			<label class="control-label" for="shape">Shape</label>
+		  	<select name="shape" class="form-control" data-bind="options: shapeOpts, value: selShape"></select>
+			
+			<label class="control-label" for="color">Color</label>
+		  	<select name="color" class="form-control" data-bind="options: colorOpts, value: selColor"></select>
+			
+			<label class="control-label" for="count">Count</label>
+		  	<select name="count" class="form-control" data-bind="options: countOpts, value: selCount"></select>
+			
+			<label class="control-label" for="type">Type</label>
+		  	<select name="type" class="form-control" data-bind="options: typeOpts, value: selType"></select>
+		  	
+		  	<label class="control-label" for="hypothesis">Hypothesis</label>
+		  	<textarea class="form-control" type="text" data-bind="value: hypothesis" disabled></textarea>
+			
+			<label class="control-label" for="result">Result</label>
+		  	<select name="result" class="form-control" data-bind="options: resultOpts, value: selResult"></select>
+		    
+		    <br />
+		    
+		    <button type="submit" class="btn btn-default" data-bind="click: addRecord">Add</button>
+		    <button type="submit" class="btn btn-default" data-bind="click: resetRecords">Reset</button>
+		</form>
+	</div>
+
+	<div class="span6">
+		<div class="bs-table-scrollable">
+			<table class="table table-bordered table-striped bs-table">
+				<thead>
+					<tr>
+						<th>Line</th>
+						<th>Line Inside</th>
+						<th>Shape</th>
+						<th>Color</th>
+						<th>Count</th>
+						<th>Type</th>
+						<th>Result</th>
+					</tr>
+				</thead>
+				<tbody data-bind="foreach: recordedResults">
+					<tr>
+						<td data-bind="text: line"></td>
+						<td data-bind="text: lineInside"></td>
+						<td data-bind="text: shape"></td>
+						<td data-bind="text: color"></td>
+						<td data-bind="text: count"></td>
+						<td data-bind="text: type"></td>
+						<td data-bind="text: result"></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+<script>
+	var viewModel = {
+		lineOpts: ["Solid", "Dashed", "Dotted"],
+		lineInsideOpts: ["Horizontal", "Diagnal", "Vertical"],
+		shapeOpts: ["Circle", "Triangle", "Square"],
+		colorOpts: ["Red", "Blue", "Green"],
+		countOpts: ["1", "2", "3"],
+		typeOpts: ["Full", "Gradient", "Empty"],
+		resultOpts: ["Match", "Not Match"],
+
+		recordedResults: ko.observableArray(),
+
+		hypothesis: ko.observable(),
+
+		selLine: ko.observable(),
+		selLineInside: ko.observable(),
+		selShape: ko.observable(),
+		selColor: ko.observable(),
+		selCount: ko.observable(),
+		selType: ko.observable(),
+		selResult: ko.observable(),
+
+		addRecord: function(){
+			this.recordedResults.push({
+				line: this.selLine(),
+				lineInside: this.selLineInside(),
+				shape: this.selShape(),
+				color: this.selColor(),
+				count: this.selCount(),
+				type: this.selType(),
+				result: this.selResult()
+			});
+			calculateHypothesis();
+		},
+		resetRecords: function(){
+			this.recordedResults.removeAll();
+			this.hypothesis("");
+		}
+	};
+
+	var removeArrayIndex = function(badArray, goodArray){
+		
+		for(var i = 0; i < badArray.length; i++){
+			var idx = goodArray.indexOf(badArray[i]);
+			if(idx > -1){
+				goodArray.splice(idx, 1);
+			}
+		}
+	};
+
+	var buildReport = function(goodArray, label){
+		if(goodArray.length > 0){
+			return " " + label + ": " + goodArray[0];
+		}
+		return "";
+	};
+
+	var calculateHypothesis = function(){
+		// get a list of what it cannot be
+		var badLines = [];
+		var badLineInsides = [];
+		var badShapes = [];
+		var badColors = [];
+		var badCounts = [];
+		var badTypes = [];
+
+		var goodLines = [];
+		var goodLineInsides = [];
+		var goodShapes = [];
+		var goodColors = [];
+		var goodCounts = [];
+		var goodTypes = [];
+
+		var results = viewModel.recordedResults();
+		
+		// separate the two lists out
+		for(var i = 0; i < results.length; i++) {
+			if(results[i].result === "Not Match"){
+				badLines.push(results[i].line);
+				badLineInsides.push(results[i].lineInside);
+				badShapes.push(results[i].shape);
+				badColors.push(results[i].color);
+				badCounts.push(results[i].count);
+				badTypes.push(results[i].type);
+			} else {
+				goodLines.push(results[i].line);
+				goodLineInsides.push(results[i].lineInside);
+				goodShapes.push(results[i].shape);
+				goodColors.push(results[i].color);
+				goodCounts.push(results[i].count);
+				goodTypes.push(results[i].type);
+			}
+		}
+
+		// remove the good that exist in the bad
+		removeArrayIndex(badLines, goodLines);
+		removeArrayIndex(badLineInsides, goodLineInsides);
+		removeArrayIndex(badShapes, goodShapes);
+		removeArrayIndex(badColors, goodColors);
+		removeArrayIndex(badCounts, goodCounts);
+		removeArrayIndex(badTypes, goodTypes);
+
+		// strength - more bad = better confidence we're correct
+		var strength = badLines.length + badLineInsides.length + badShapes.length + badColors.length + badCounts.length + badTypes.length;
+
+		var reportStatus = "strength: " + strength;
+		reportStatus = reportStatus + buildReport(goodLines, "line");
+		reportStatus = reportStatus + buildReport(goodLineInsides, "line inside");
+		reportStatus = reportStatus + buildReport(goodShapes, "shape");
+		reportStatus = reportStatus + buildReport(goodColors, "color");
+		reportStatus = reportStatus + buildReport(goodCounts, "count");
+		reportStatus = reportStatus + buildReport(goodTypes, "type");
+
+		viewModel.hypothesis(reportStatus);
+	};
+
+	viewModel.selLine.subscribe(function(newValue){
+		calculateHypothesis();
+	});
+	viewModel.selLineInside.subscribe(function(newValue){
+		calculateHypothesis();
+	});
+	viewModel.selShape.subscribe(function(newValue){
+		calculateHypothesis();
+	});
+	viewModel.selColor.subscribe(function(newValue){
+		calculateHypothesis();
+	});
+	viewModel.selCount.subscribe(function(newValue){
+		calculateHypothesis();
+	});
+	viewModel.selType.subscribe(function(newValue){
+		calculateHypothesis();
+	});
+	viewModel.selResult.subscribe(function(newValue){
+		calculateHypothesis();
+	});
+
+
+	ko.applyBindings(viewModel);
+</script>
