@@ -22,7 +22,7 @@
 		  	<select name="type" class="form-control" data-bind="options: typeOpts, value: selType"></select>
 		  	
 		  	<label class="control-label" for="hypothesis">Hypothesis</label>
-		  	<textarea class="form-control" type="text" data-bind="value: hypothesis" disabled></textarea>
+		  	<textarea class="form-control" style="height: 200px;" type="text" data-bind="value: hypothesis" disabled></textarea>
 			
 			<label class="control-label" for="result">Result</label>
 		  	<select name="result" class="form-control" data-bind="options: resultOpts, value: selResult"></select>
@@ -115,7 +115,7 @@
 
 	var buildReport = function(goodArray, label){
 		if(goodArray.length > 0){
-			return " " + label + ": " + goodArray[0];
+			return label + ": " + goodArray[0];
 		}
 		return "";
 	};
@@ -168,13 +168,13 @@
 		// strength - more bad = better confidence we're correct
 		var strength = badLines.length + badLineInsides.length + badShapes.length + badColors.length + badCounts.length + badTypes.length;
 
-		var reportStatus = "strength: " + strength;
+		var reportStatus = "";
 		reportStatus = reportStatus + buildReport(goodLines, "line");
-		reportStatus = reportStatus + buildReport(goodLineInsides, "line inside");
-		reportStatus = reportStatus + buildReport(goodShapes, "shape");
-		reportStatus = reportStatus + buildReport(goodColors, "color");
-		reportStatus = reportStatus + buildReport(goodCounts, "count");
-		reportStatus = reportStatus + buildReport(goodTypes, "type");
+		reportStatus = reportStatus + "\n" + buildReport(goodLineInsides, "line inside");
+		reportStatus = reportStatus + "\n" + buildReport(goodShapes, "shape");
+		reportStatus = reportStatus + "\n" + buildReport(goodColors, "color");
+		reportStatus = reportStatus + "\n" + buildReport(goodCounts, "count");
+		reportStatus = reportStatus + "\n" + buildReport(goodTypes, "type");
 
 		viewModel.hypothesis(reportStatus);
 	};
